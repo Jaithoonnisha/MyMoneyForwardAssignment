@@ -52,10 +52,12 @@ class UsersController < ApplicationController
 
   # POST /close
   def destroy
-    user = User.find_by(user_id: params[:user_id])
+    user_id = params[:user_id] || params[:id]
+    user = User.find_by(user_id: user_id)
+
     if user
       user.destroy
-      render json: { message: "Account successfully removed" }, status: :ok
+      render json: { message: "Account and user successfully removed" }, status: :ok
     else
       render json: { message: "User not found" }, status: :not_found
     end
