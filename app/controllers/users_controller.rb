@@ -1,11 +1,16 @@
 class UsersController < ApplicationController
+  before_action :check_auth, only: [:show, :update, :destroy]
+
   # POST /signup
   def signup
     user = User.new(user_params)
     if user.save
       render json: {
         message: "Account successfully created",
-        user: { user_id: user.user_id, nickname: user.nickname || user.user_id }
+        user: {
+          user_id: user.user_id,
+          nickname: user.nickname || user.user_id
+        }
       }, status: :ok
     else
       render json: {
@@ -19,7 +24,14 @@ class UsersController < ApplicationController
   def show
     user = User.find_by(user_id: params[:user_id])
     if user
-      render json: { user_id: user.user_id, nickname: user.nickname, comment: user.comment }
+      render json: {
+        message: "User information retrieved",
+        user: {
+          user_id: user.user_id,
+          nickname: user.nickname,
+          comment: user.comment
+        }
+      }, status: :ok
     else
       render json: { message: "User not found" }, status: :not_found
     end
@@ -29,7 +41,7 @@ class UsersController < ApplicationController
   def update
     user = User.find_by(user_id: params[:user_id])
     if user&.update(update_params)
-      render json: { message: "Account successfully updated" }
+      render json: { message: "Account successfully updated" }, status: :ok
     else
       render json: {
         message: "Account update failed",
@@ -43,7 +55,7 @@ class UsersController < ApplicationController
     user = User.find_by(user_id: params[:user_id])
     if user
       user.destroy
-      render json: { message: "Account successfully removed" }
+      render json: { message: "Account successfully removed" }, status: :ok
     else
       render json: { message: "User not found" }, status: :not_found
     end
@@ -57,5 +69,12 @@ class UsersController < ApplicationController
 
   def update_params
     params.permit(:password, :nickname, :comment)
+  end
+
+  def check_auth
+    auth = request.headers["Authorization"]
+    unless auth == "Bearer token"
+      render json: { message: "Unauthorized" }, status: :unauthorized
+    end
   end
 end
