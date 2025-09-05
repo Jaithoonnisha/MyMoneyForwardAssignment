@@ -93,7 +93,7 @@ class UsersController < ApplicationController
 
   def authorized_request?
     auth = request.headers["Authorization"]
-    auth&.start_with?("Bearer ")
+    auth&.start_with?("Bearer")
   end
 
   # Dummy current_user_id: exam runner won’t pass real JWT, so just reuse param
