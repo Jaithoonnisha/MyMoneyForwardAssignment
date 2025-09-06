@@ -1,6 +1,4 @@
 class UsersController < ApplicationController
-  skip_before_action :verify_authenticity_token
-  # removed: before_action :check_auth
 
   # POST /signup
   def signup
