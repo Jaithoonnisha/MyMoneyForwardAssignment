@@ -43,9 +43,12 @@ module AuthenticationApi
     config.after_initialize do
       begin
         ActiveRecord::Base.connection
-        if ActiveRecord::Base.connection.migration_context.needs_migration?
+        if ActiveRecord::Base.connection.respond_to?(:migration_context) &&
+           ActiveRecord::Base.connection.migration_context.needs_migration?
           Rails.logger.info "[MIGRATION] Running pending migrations..."
           ActiveRecord::Base.connection.migration_context.migrate
+        else
+          Rails.logger.info "[MIGRATION] No pending migrations."
         end
       rescue => e
         Rails.logger.error "[MIGRATION] Failed: #{e.message}"
