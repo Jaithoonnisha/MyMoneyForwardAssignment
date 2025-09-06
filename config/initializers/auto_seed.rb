@@ -1,15 +1,9 @@
 Rails.application.config.after_initialize do
   begin
-    if User.count == 0
-      Rails.logger.info "[SEED] Creating default TrackTest user..."
-      User.create!(
-        user_id: "TaroYamada",
-        password: "password",
-        nickname: "Taro",
-        comment: "I'm happy."
-      )
-    else
-      Rails.logger.info "[SEED] Users already exist, skipping."
+    User.find_or_create_by!(user_id: "TaroYamada") do |u|
+      u.password = "password"
+      u.nickname = "Taro"
+      u.comment  = "I'm happy."
     end
   rescue => e
     Rails.logger.error "[SEED] Failed: #{e.message}"

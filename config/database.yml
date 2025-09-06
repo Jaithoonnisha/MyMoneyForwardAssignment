@@ -1,4 +1,3 @@
-# SQLite for local development and tests
 default: &default
   adapter: sqlite3
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
@@ -12,9 +11,6 @@ test:
   <<: *default
   database: storage/test.sqlite3
 
-# ✅ Postgres for production (Railway provides DATABASE_URL)
 production:
-  adapter: postgresql
-  encoding: unicode
-  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  url: <%= ENV["DATABASE_URL"] %>
+  <<: *default
+  database: storage/production.sqlite3
