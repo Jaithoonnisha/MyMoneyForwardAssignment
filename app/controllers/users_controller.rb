@@ -1,12 +1,13 @@
 class UsersController < ApplicationController
+  before_action :log_request
   before_action :check_auth, only: [:show, :update, :destroy]
 
   # POST /signup
   def signup
-    Rails.logger.info "Signup attempt with params: #{params.inspect}"
+    Rails.logger.info "[REQUEST] Signup with params: #{params.inspect}"
     user = User.new(user_params)
     if user.save
-      Rails.logger.info "Signup successful for user_id=#{user.user_id}"
+      Rails.logger.info "[SIGNUP] Success for user_id=#{user.user_id}"
       render json: {
         message: "Account successfully created",
         user: {
@@ -15,7 +16,7 @@ class UsersController < ApplicationController
         }
       }, status: :ok
     else
-      Rails.logger.warn "Signup failed: #{user.errors.full_messages.inspect}"
+      Rails.logger.warn "[SIGNUP] Failed with errors: #{user.errors.full_messages.inspect}"
       render json: {
         message: "Account creation failed",
         cause: "Required user_id and password"
@@ -25,10 +26,10 @@ class UsersController < ApplicationController
 
   # GET /users/:user_id
   def show
-    Rails.logger.info "Fetching user with user_id=#{params[:user_id]}"
+    Rails.logger.info "[SHOW] Fetching user_id=#{params[:user_id]}"
     user = User.find_by(user_id: params[:user_id])
     if user
-      Rails.logger.info "User found: #{user.inspect}"
+      Rails.logger.info "[SHOW] Found user: #{user.inspect}"
       render json: {
         message: "User details by user_id",
         user: {
@@ -38,33 +39,33 @@ class UsersController < ApplicationController
         }
       }, status: :ok
     else
-      Rails.logger.warn "User not found with user_id=#{params[:user_id]}"
+      Rails.logger.warn "[SHOW] User not found with user_id=#{params[:user_id]}"
       render json: { message: "User not found" }, status: :not_found
     end
   end
 
   # PUT /users/:user_id
   def update
-    Rails.logger.info "Update attempt for user_id=#{params[:user_id]} with params: #{params.inspect}"
+    Rails.logger.info "[UPDATE] Attempt for user_id=#{params[:user_id]} with params: #{params.inspect}"
     user = User.find_by(user_id: params[:user_id])
     if user&.update(user_params)
-      Rails.logger.info "User updated successfully: #{user.inspect}"
+      Rails.logger.info "[UPDATE] Success for user_id=#{params[:user_id]}"
       render json: { message: "User successfully updated" }, status: :ok
     else
-      Rails.logger.warn "User update failed for user_id=#{params[:user_id]}"
+      Rails.logger.warn "[UPDATE] Failed for user_id=#{params[:user_id]}"
       render json: { message: "User update failed" }, status: :bad_request
     end
   end
 
   # DELETE /users/:user_id
   def destroy
-    Rails.logger.info "Delete attempt for user_id=#{params[:user_id]}"
+    Rails.logger.info "[DELETE] Attempt for user_id=#{params[:user_id]}"
     user = User.find_by(user_id: params[:user_id])
     if user&.destroy
-      Rails.logger.info "User deleted successfully: user_id=#{params[:user_id]}"
+      Rails.logger.info "[DELETE] Success for user_id=#{params[:user_id]}"
       render json: { message: "Account and user successfully removed" }, status: :ok
     else
-      Rails.logger.warn "Delete failed: user not found with user_id=#{params[:user_id]}"
+      Rails.logger.warn "[DELETE] Failed → user not found with user_id=#{params[:user_id]}"
       render json: { message: "User not found" }, status: :not_found
     end
   end
@@ -75,27 +76,48 @@ class UsersController < ApplicationController
     params.permit(:user_id, :password, :nickname, :comment)
   end
 
+  def log_request
+    Rails.logger.info "[REQUEST] #{request.method} #{request.fullpath}"
+    Rails.logger.info "[REQUEST] Params: #{params.inspect}"
+    Rails.logger.info "[REQUEST] Body: #{request.raw_post.presence || 'EMPTY'}"
+    Rails.logger.info "[REQUEST] Headers: Authorization=#{request.headers['Authorization']}"
+  end
+
   def check_auth
     auth_header = request.headers['Authorization']
-    Rails.logger.debug "Auth header received: #{auth_header}"
+    Rails.logger.debug "[AUTH] Raw header: #{auth_header}"
 
     if auth_header.present? && auth_header.start_with?('Basic ')
       encoded = auth_header.split(' ', 2).last
-      decoded = Base64.decode64(encoded).split(':', 2)
-      user_id, password = decoded
-      Rails.logger.debug "Decoded credentials: user_id=#{user_id}, password=#{password}"
+      Rails.logger.debug "[AUTH] Encoded: #{encoded}"
 
-      user = User.find_by(user_id: user_id)
-      if user && user.password == password
-        Rails.logger.info "Authentication successful for user_id=#{user_id}"
-        return true
-      else
-        Rails.logger.warn "Authentication failed for user_id=#{user_id}"
+      begin
+        decoded = Base64.decode64(encoded)
+        Rails.logger.debug "[AUTH] Decoded: #{decoded}"
+
+        user_id, password = decoded.split(':', 2)
+        Rails.logger.debug "[AUTH] user_id=#{user_id}, password=#{password}"
+
+        user = User.find_by(user_id: user_id)
+        if user
+          Rails.logger.debug "[AUTH] Found user in DB: #{user.inspect}"
+          if user.password == password
+            Rails.logger.info "[AUTH] ✅ Success for user_id=#{user_id}"
+            return true
+          else
+            Rails.logger.warn "[AUTH] ❌ Password mismatch for user_id=#{user_id}"
+          end
+        else
+          Rails.logger.warn "[AUTH] ❌ No user in DB for user_id=#{user_id}"
+        end
+      rescue => e
+        Rails.logger.error "[AUTH] Exception during decode: #{e.message}"
       end
     else
-      Rails.logger.warn "No valid Authorization header present"
+      Rails.logger.warn "[AUTH] ❌ No valid Authorization header"
     end
 
+    Rails.logger.error "[AUTH] Authentication failed → 401"
     render json: { message: "Authentication failed" }, status: :unauthorized
   end
 end
