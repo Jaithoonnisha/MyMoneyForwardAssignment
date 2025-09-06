@@ -57,19 +57,17 @@ class UsersController < ApplicationController
     end
   end
 
-  # DELETE /users/:user_id
-  def destroy
-    if @current_user.user_id == params[:user_id]
+  # POST /close
+  def close
+    if @current_user&.user_id == params[:user_id] || params[:user_id].blank?
       if @current_user.destroy
-        Rails.logger.info "[DELETE] ✅ Deleted user_id=#{@current_user.user_id}"
+        Rails.logger.info "[CLOSE] ✅ Deleted user_id=#{@current_user.user_id}"
         render json: { message: "Account and user successfully removed" }, status: :ok
       else
-        Rails.logger.warn "[DELETE] ❌ Failed to delete user_id=#{@current_user.user_id}"
         render json: { message: "User not found" }, status: :not_found
       end
     else
-      Rails.logger.warn "[DELETE] ❌ Forbidden: auth=#{@current_user.user_id}, param=#{params[:user_id]}"
-      render json: { message: "No permission for update" }, status: :forbidden
+      render json: { message: "Authentication failed" }, status: :unauthorized
     end
   end
 
