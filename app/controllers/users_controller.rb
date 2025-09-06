@@ -37,7 +37,7 @@ class UsersController < ApplicationController
       }, status: :ok
     else
       Rails.logger.warn "[SHOW] ❌ Forbidden: auth=#{@current_user.user_id}, param=#{params[:user_id]}"
-      render json: { message: "Forbidden" }, status: :forbidden
+      render json: { message: "No permission for update" }, status: :forbidden
     end
   end
 
@@ -53,7 +53,7 @@ class UsersController < ApplicationController
       end
     else
       Rails.logger.warn "[UPDATE] ❌ Forbidden: auth=#{@current_user.user_id}, param=#{params[:user_id]}"
-      render json: { message: "Forbidden" }, status: :forbidden
+      render json: { message: "No permission for update" }, status: :forbidden
     end
   end
 
@@ -69,7 +69,7 @@ class UsersController < ApplicationController
       end
     else
       Rails.logger.warn "[DELETE] ❌ Forbidden: auth=#{@current_user.user_id}, param=#{params[:user_id]}"
-      render json: { message: "no permission for update" }, status: :forbidden
+      render json: { message: "No permission for update" }, status: :forbidden
     end
   end
 
