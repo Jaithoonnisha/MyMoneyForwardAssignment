@@ -69,7 +69,7 @@ class UsersController < ApplicationController
       end
     else
       Rails.logger.warn "[DELETE] ❌ Forbidden: auth=#{@current_user.user_id}, param=#{params[:user_id]}"
-      render json: { message: "Forbidden" }, status: :forbidden
+      render json: { message: "no permission for update" }, status: :forbidden
     end
   end
 
