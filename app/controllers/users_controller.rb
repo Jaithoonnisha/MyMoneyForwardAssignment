@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :check_auth, only: [:show, :update, :destroy]
+  before_action :check_auth, only: [:show, :update, :close]
 
   # POST /signup
   def signup
