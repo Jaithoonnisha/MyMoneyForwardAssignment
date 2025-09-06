@@ -24,7 +24,7 @@ class UsersController < ApplicationController
     user = User.find_by(user_id: params[:user_id])
     if user
       render json: {
-        message: "User information retrieved",
+        message: "user details by user_id",
         user: {
           user_id: user.user_id,
           nickname: user.nickname,
@@ -82,7 +82,6 @@ class UsersController < ApplicationController
   end
 
   def authenticate_user(user_id, password)
-    return nil if user_id.blank? || password.blank?
     User.find_by(user_id: user_id, password: password)
   end
 
